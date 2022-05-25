@@ -15,7 +15,7 @@ namespace RFStorageModifier
     {
         private static int Major = 1;
         private static int Minor = 0;
-        private static int Patch = 1;
+        private static int Patch = 2;
         
         public static Plugin Inst;
         public static Configuration Conf;
