@@ -13,8 +13,8 @@ namespace RFStorageModifier
             Enabled = true;
             Storages = new HashSet<Storage>
             {
-                new() {ItemId = 328, Height = 10, Width = 10},
-                new() {ItemId = 367, Height = 10, Width = 10},
+                new() {ItemId = 328, Height = 20, Width = 10},
+                new() {ItemId = 367, Height = 20, Width = 10},
             };
         }
     }

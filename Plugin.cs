@@ -1,4 +1,7 @@
-﻿using RFStorageModifier.Utils;
+﻿using System.Collections.Generic;
+using System.Linq;
+using RFStorageModifier.Models;
+using RFStorageModifier.Utils;
 using Rocket.API.Collections;
 using Rocket.Core.Plugins;
 using Rocket.Unturned.Chat;
@@ -12,10 +15,11 @@ namespace RFStorageModifier
     {
         private static int Major = 1;
         private static int Minor = 0;
-        private static int Patch = 0;
+        private static int Patch = 1;
         
         public static Plugin Inst;
         public static Configuration Conf;
+        internal static HashSet<Storage> ModifiedStorages;
 
         protected override void Load()
         {
@@ -23,8 +27,11 @@ namespace RFStorageModifier
             Conf = Configuration.Instance;
             if (Conf.Enabled)
             {
-                Level.onPostLevelLoaded += OnPostLevelLoaded;
+                ModifiedStorages = new HashSet<Storage>();
                 
+                Level.onPreLevelLoaded += OnPrePreLevelLoaded;
+                Level.onPostLevelLoaded += OnPostLevelLoaded;
+
                 if (Level.isLoaded)
                     OnPostLevelLoaded(0);
             }
@@ -40,7 +47,7 @@ namespace RFStorageModifier
         {
             if (Conf.Enabled)
             {
-                Level.onPostLevelLoaded -= OnPostLevelLoaded;
+                Level.onPreLevelLoaded -= OnPrePreLevelLoaded;
             }
             
             Conf = null;
@@ -49,10 +56,43 @@ namespace RFStorageModifier
             Logger.LogWarning($"[{Name}] Plugin unloaded successfully!");
         }
         
-        private static void OnPostLevelLoaded(int level)
+        private static void OnPrePreLevelLoaded(int level)
         {
-            foreach (var clothing in Conf.Storages)
-                StorageUtil.Modify(clothing);
+            foreach (var storage in Conf.Storages)
+                StorageUtil.ModifyAsset(storage);
+        }
+
+        private void OnPostLevelLoaded(int level)
+        {
+            foreach (var region in BarricadeManager.regions)
+            {
+                foreach (var drop in region.drops)
+                {
+                    if (drop.interactable is not InteractableStorage storage)
+                        continue;
+
+                    var replace = Conf.Storages.FirstOrDefault(x => x.ItemId == drop.asset.id);
+                    if (replace == null)
+                        continue;
+                        
+                    StorageUtil.ModifyBarricade(storage, replace);
+                }
+            }
+                
+            foreach (var region in BarricadeManager.vehicleRegions)
+            {
+                foreach (var drop in region.drops)
+                {
+                    if (drop.interactable is not InteractableStorage storage)
+                        continue;
+
+                    var replace = Conf.Storages.FirstOrDefault(x => x.ItemId == drop.asset.id);
+                    if (replace == null)
+                        continue;
+                        
+                    StorageUtil.ModifyBarricade(storage, replace);
+                }
+            }
         }
     }
 }
