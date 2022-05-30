@@ -7,10 +7,12 @@ namespace RFStorageModifier
     public class Configuration : IRocketPluginConfiguration
     {
         public bool Enabled;
+        public bool RevertOnUnload;
         public HashSet<Storage> Storages;
         public void LoadDefaults()
         {
             Enabled = true;
+            RevertOnUnload = true;
             Storages = new HashSet<Storage>
             {
                 new() {ItemId = 328, Height = 20, Width = 10},

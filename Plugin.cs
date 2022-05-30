@@ -15,11 +15,12 @@ namespace RFStorageModifier
     {
         private static int Major = 1;
         private static int Minor = 0;
-        private static int Patch = 2;
+        private static int Patch = 3;
         
         public static Plugin Inst;
         public static Configuration Conf;
         internal static HashSet<Storage> ModifiedStorages;
+        internal static HashSet<Storage> OriginalStorages;
 
         protected override void Load()
         {
@@ -28,6 +29,7 @@ namespace RFStorageModifier
             if (Conf.Enabled)
             {
                 ModifiedStorages = new HashSet<Storage>();
+                OriginalStorages = new HashSet<Storage>();
                 
                 Level.onPreLevelLoaded += OnPrePreLevelLoaded;
                 Level.onPostLevelLoaded += OnPostLevelLoaded;
@@ -48,6 +50,40 @@ namespace RFStorageModifier
             if (Conf.Enabled)
             {
                 Level.onPreLevelLoaded -= OnPrePreLevelLoaded;
+                Level.onPostLevelLoaded -= OnPostLevelLoaded;
+
+                if (Level.isLoaded && Conf.RevertOnUnload)
+                {
+                    foreach (var region in BarricadeManager.regions)
+                    {
+                        foreach (var drop in region.drops)
+                        {
+                            if (drop.interactable is not InteractableStorage storage)
+                                continue;
+
+                            OriginalStorages.TryGetValue(new Storage { ItemId = drop.asset.id }, out var replace);
+                            if (replace == null)
+                                continue;
+                        
+                            StorageUtil.RevertBarricade(storage, replace);
+                        }
+                    }
+                
+                    foreach (var region in BarricadeManager.vehicleRegions)
+                    {
+                        foreach (var drop in region.drops)
+                        {
+                            if (drop.interactable is not InteractableStorage storage)
+                                continue;
+
+                            OriginalStorages.TryGetValue(new Storage { ItemId = drop.asset.id }, out var replace);
+                            if (replace == null)
+                                continue;
+                        
+                            StorageUtil.RevertBarricade(storage, replace);
+                        }
+                    }
+                }
             }
             
             Conf = null;
